@@ -221,9 +221,12 @@ esp_err_t rest_common_get_handler(httpd_req_t *req)
         read_bytes = read(fd, chunk, SCRATCH_BUFSIZE);
         if (read_bytes < 0) {
             ESP_LOGE(TAG, "Read error while sending %s", filepath);
-            // Terminate chunked response explicitly before reporting failure
-            httpd_resp_send_chunk(req, NULL, 0);
-            return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Read error");
+            // Headers (and possibly part of the body) are already on the wire, so we
+            // can't send a 500 anymore. Do NOT send the terminating zero-length chunk
+            // either: that would tell the client the truncated body is complete.
+            // Returning ESP_FAIL makes httpd close the connection, so the client sees
+            // an incomplete transfer and can retry.
+            return ESP_FAIL;
         }
 
         if (read_bytes == 0) {
@@ -233,8 +236,10 @@ esp_err_t rest_common_get_handler(httpd_req_t *req)
 
         if (httpd_resp_send_chunk(req, chunk, read_bytes) != ESP_OK) {
             ESP_LOGE(TAG, "Failed to send file chunk");
-            // Try to terminate chunked response; ignore result
-            httpd_resp_send_chunk(req, NULL, 0);
+            // Do NOT terminate the chunked response here. A zero-length chunk marks the
+            // body as complete, so a client that still receives it would accept a
+            // truncated .js/.css file as valid (and may cache it).
+            // Returning ESP_FAIL makes httpd close the connection instead.
             return ESP_FAIL;
         }
     }
