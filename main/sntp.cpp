@@ -2,6 +2,8 @@
 #include "esp_sntp.h"
 #include "global_state.h"
 #include "sntp.h"
+#include "nvs_config.h"
+#include <stdlib.h>
 
 
 // ---- SNTP helpers ----
@@ -37,14 +39,20 @@ void SNTP::start() {
     // Optional: notification callback
     sntp_set_time_sync_notification_cb(time_sync_notification_cb);
 
-    // Set TZ to Europe/Berlin (CET/CEST with rules)
-    setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1);
-    tzset();
+    // timezone from settings (default Europe/Berlin)
+    applyTimezone();
 
     // Start SNTP
     esp_sntp_init();
 
     ESP_LOGI(TAG_TIME, "SNTP started");
+}
+
+void SNTP::applyTimezone() {
+    char *tz = Config::getTimezone();
+    setenv("TZ", (tz && tz[0]) ? tz : "CET-1CEST,M3.5.0,M10.5.0/3", 1);
+    tzset();
+    free(tz);
 }
 
 bool SNTP::waitForInitialSync(int timeout_ms) {

@@ -9,4 +9,5 @@ class SNTP {
     void start();
     void logLocalTime();
     bool isTimeSynced();
+    void applyTimezone();   // (re)load the configured POSIX TZ string
 };

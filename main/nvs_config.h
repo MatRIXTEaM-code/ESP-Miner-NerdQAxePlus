@@ -79,6 +79,12 @@
 
 #define NVS_CONFIG_VR_FREQUENCY "vr_frequency"
 
+// Mining schedule (e.g. solar): mine only inside [start,end) local time
+#define NVS_CONFIG_SCHED_ENABLE "sched_en"
+#define NVS_CONFIG_SCHED_START  "sched_start"   // minutes since local midnight
+#define NVS_CONFIG_SCHED_END    "sched_end"     // minutes since local midnight
+#define NVS_CONFIG_TIMEZONE     "tz"            // POSIX TZ string
+
 // device global stats
 #define NVS_TOTAL_FOUND_BLOCKS "totalblocks"
 #define NVS_CONFIG_BEST_DIFF "bestdiff"
@@ -146,6 +152,15 @@ namespace Config {
     bool     cfgHasKey(const char* path);
 
     // ---- String Getters ----
+    inline char* getTimezone() { return cfgGetStrAlloc(NVS_CONFIG_TIMEZONE, "CET-1CEST,M3.5.0,M10.5.0/3"); }
+    inline void setTimezone(const char* v) { cfgSetStr(NVS_CONFIG_TIMEZONE, v); }
+    inline bool isScheduleEnabled() { return cfgGetU16(NVS_CONFIG_SCHED_ENABLE, 0) != 0; }
+    inline void setScheduleEnabled(bool v) { cfgSetU16(NVS_CONFIG_SCHED_ENABLE, v ? 1 : 0); }
+    inline uint16_t getScheduleStart() { return cfgGetU16(NVS_CONFIG_SCHED_START, 8 * 60); }
+    inline uint16_t getScheduleEnd() { return cfgGetU16(NVS_CONFIG_SCHED_END, 18 * 60); }
+    inline void setScheduleStart(uint16_t v) { cfgSetU16(NVS_CONFIG_SCHED_START, v); }
+    inline void setScheduleEnd(uint16_t v) { cfgSetU16(NVS_CONFIG_SCHED_END, v); }
+
     inline char* getWifiSSID() { return cfgGetStrAlloc(NVS_CONFIG_WIFI_SSID, CONFIG_ESP_WIFI_SSID); }
     inline char* getWifiPass() { return cfgGetStrAlloc(NVS_CONFIG_WIFI_PASS, CONFIG_ESP_WIFI_PASSWORD); }
     inline char* getHostname() { return cfgGetStrAlloc(NVS_CONFIG_HOSTNAME, CONFIG_LWIP_LOCAL_HOSTNAME); }

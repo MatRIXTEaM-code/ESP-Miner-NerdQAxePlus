@@ -80,4 +80,10 @@ export interface ISettingsV2 {
     flipScreen: number;
     invertScreen: number;
     autoScreenOff: number;
+
+    // Mining schedule (minutes since local midnight)
+    schedEnabled: number;
+    schedStart: number;
+    schedEnd: number;
+    timezone: string;
 }

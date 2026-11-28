@@ -13,6 +13,9 @@
 #include "http_utils.h"
 #include "macros.h"
 #include "network_manager.h"
+#include "sntp.h"
+
+extern SNTP sntp;
 
 static const char *TAG = "http_v2_settings";
 
@@ -158,6 +161,16 @@ esp_err_t GET_V2_settings(httpd_req_t *req)
         free(ssid);
     }
 
+    // --- mining schedule ---
+    doc["schedEnabled"] = Config::isScheduleEnabled() ? 1 : 0;
+    doc["schedStart"]   = Config::getScheduleStart();
+    doc["schedEnd"]     = Config::getScheduleEnd();
+    {
+        char *tz = Config::getTimezone();   // non-const: ArduinoJson copies it
+        doc["timezone"] = tz;
+        free(tz);
+    }
+
     // --- mempool ---
     {
         doc["mempoolCustom"] = Config::isMempoolCustom();
@@ -234,6 +247,24 @@ esp_err_t PATCH_V2_settings(httpd_req_t *req)
     }
     if (doc["vrFrequency"].is<uint32_t>() && doc["vrFrequency"].as<uint32_t>() > 0) {
         Config::setVrFrequency(doc["vrFrequency"].as<uint32_t>());
+    }
+
+    // --- mining schedule ---
+    if (doc["schedEnabled"].is<bool>()) {
+        Config::setScheduleEnabled(doc["schedEnabled"].as<bool>());
+    }
+    if (doc["schedStart"].is<uint16_t>() && doc["schedStart"].as<uint16_t>() < 1440) {
+        Config::setScheduleStart(doc["schedStart"].as<uint16_t>());
+    }
+    if (doc["schedEnd"].is<uint16_t>() && doc["schedEnd"].as<uint16_t>() < 1440) {
+        Config::setScheduleEnd(doc["schedEnd"].as<uint16_t>());
+    }
+    if (doc["timezone"].is<const char*>()) {
+        const char *tz = doc["timezone"].as<const char*>();
+        if (tz && tz[0] && strlen(tz) < 64) {
+            Config::setTimezone(tz);
+            sntp.applyTimezone();
+        }
     }
 
     // --- display ---

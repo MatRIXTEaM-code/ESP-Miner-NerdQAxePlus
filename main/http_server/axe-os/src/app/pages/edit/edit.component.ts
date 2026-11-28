@@ -71,6 +71,16 @@ export class EditComponent implements OnInit {
   public hasCanExtension = false;
   private pendingTotp: string | undefined;
 
+  private minutesToTime(m: number): string {
+    const h = Math.floor(m / 60), mm = m % 60;
+    return `${String(h).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+  }
+
+  private timeToMinutes(t: string): number {
+    const [h, m] = (t || '00:00').split(':').map(Number);
+    return (h || 0) * 60 + (m || 0);
+  }
+
   private asicFrequencyValues: number[] = [];
   private asicVoltageValues: number[] = [];
 
@@ -202,6 +212,10 @@ export class EditComponent implements OnInit {
           flipScreen: [info.flipScreen == 1],
           invertScreen: [info.invertScreen == 1],
           autoScreenOff: [info.autoScreenOff == 1],
+          schedEnabled: [info.schedEnabled == 1],
+          schedStart: [this.minutesToTime(info.schedStart ?? 480)],
+          schedEnd: [this.minutesToTime(info.schedEnd ?? 1080)],
+          timezone: [info.timezone || 'CET-1CEST,M3.5.0,M10.5.0/3'],
           customMempoolEnabled: [!!info.mempoolCustom],
           mempoolUrl: [info.mempoolUrl || 'https://mempool.space'],
           timeFormat: [this.localStorageService.getItem('timeFormat') || '24h'],
@@ -486,6 +500,11 @@ export class EditComponent implements OnInit {
       flipScreen: !!f.flipScreen,
       invertScreen: !!f.invertScreen,
       autoScreenOff: !!f.autoScreenOff,
+      // Mining schedule
+      schedEnabled: !!f.schedEnabled,
+      schedStart: this.timeToMinutes(f.schedStart),
+      schedEnd: this.timeToMinutes(f.schedEnd),
+      timezone: f.timezone,
       // CAN
       canMaster: !!f.canMaster,
     };

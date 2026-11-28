@@ -462,6 +462,10 @@
     "SETTINGS": "Misc Settings",
     "FLIP_SCREEN": "Flip Screen",
     "AUTO_SCREEN_OFF": "Automatic Screen Shutdown",
+    "SCHEDULE_ENABLE": "Only mine during a daily time window (e.g. solar)",
+    "SCHEDULE_START": "Start mining at (local time)",
+    "SCHEDULE_END": "Stop mining at (local time)",
+    "TIMEZONE": "Timezone (POSIX TZ, e.g. GMT0BST,M3.5.0/1,M10.5.0)",
     "STRATUM_KEEPALIVE": "Enable Stratum TCP Keepalive",
     "CUSTOM_MEMPOOL": "Custom Mempool endpoint",
     "MEMPOOL_URL": "Mempool URL"

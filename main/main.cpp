@@ -31,6 +31,7 @@
 #include "history.h"
 #include "http_server.h"
 #include "influx_task.h"
+#include "schedule_task.h"
 #include "macros.h"
 #include "main.h"
 #include "nvs_config.h"
@@ -420,6 +421,7 @@ extern "C" void app_main(void)
             xTaskCreatePSRAM(create_jobs_task, "stratum miner", 8192, NULL, 10, NULL);
             xTaskCreatePSRAM(ASIC_result_task, "asic result", 8192, NULL, 15, NULL);
             xTaskCreatePSRAM(influx_task, "influx", 8192, NULL, 1, NULL);
+            xTaskCreatePSRAM(schedule_task, "schedule", 4096, NULL, 1, NULL);
             xTaskCreatePSRAM(APIs_FETCHER.taskWrapper, "apis ticker", 8192, (void *) &APIs_FETCHER, 5, NULL);
             xTaskCreatePSRAM(wifi_monitor_task, "wifi monitor", 4096, NULL, 1, NULL);
             // only with CAN hardware: on the NerdQAxe family the CAN pins are shared

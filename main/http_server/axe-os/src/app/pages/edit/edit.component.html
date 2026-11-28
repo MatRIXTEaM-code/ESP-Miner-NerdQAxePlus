@@ -605,6 +605,29 @@
                     <nb-checkbox formControlName="autoScreenOff">{{ 'MISC.AUTO_SCREEN_OFF' | translate }}</nb-checkbox>
                 </div>
                 <div class="form-row">
+                    <nb-checkbox formControlName="schedEnabled">{{ 'MISC.SCHEDULE_ENABLE' | translate }}</nb-checkbox>
+                </div>
+                <ng-container *ngIf="form.controls['schedEnabled'].value">
+                    <div class="form-row">
+                        <label for="schedStart" class="form-label">{{ 'MISC.SCHEDULE_START' | translate }}:</label>
+                        <div class="form-control-wrapper">
+                            <input nbInput id="schedStart" type="time" formControlName="schedStart" />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <label for="schedEnd" class="form-label">{{ 'MISC.SCHEDULE_END' | translate }}:</label>
+                        <div class="form-control-wrapper">
+                            <input nbInput id="schedEnd" type="time" formControlName="schedEnd" />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <label for="timezone" class="form-label">{{ 'MISC.TIMEZONE' | translate }}:</label>
+                        <div class="form-control-wrapper">
+                            <input nbInput id="timezone" type="text" formControlName="timezone" />
+                        </div>
+                    </div>
+                </ng-container>
+                <div class="form-row">
                     <nb-checkbox formControlName="customMempoolEnabled">{{ 'MISC.CUSTOM_MEMPOOL' | translate }}</nb-checkbox>
                 </div>
                 <div class="form-row" *ngIf="form.controls['customMempoolEnabled'].value">

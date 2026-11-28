@@ -269,7 +269,12 @@ Full device configuration. Used by the Settings page.
 
   "flipScreen": 0,
   "invertScreen": 0,
-  "autoScreenOff": 0
+  "autoScreenOff": 0,
+
+  "schedEnabled": 0,
+  "schedStart": 480,
+  "schedEnd": 1080,
+  "timezone": "CET-1CEST,M3.5.0,M10.5.0/3"
 }
 ```
 
@@ -324,7 +329,12 @@ Accepts the same structure as `GET /api/v2/settings`. Pool settings use the `poo
 
   "flipScreen": false,
   "autoScreenOff": false,
-  "canMaster": false
+  "canMaster": false,
+
+  "schedEnabled": false,
+  "schedStart": 480,
+  "schedEnd": 1080,
+  "timezone": "GMT0BST,M3.5.0/1,M10.5.0"
 }
 ```
 
@@ -608,3 +618,14 @@ When OTP is enabled, write operations require one of:
 - **`X-OTP-Session` header**: Session token obtained from `POST /api/v2/otp/session`
 
 Session tokens are valid for 24 hours by default. Rate limiting applies: 5 failed TOTP attempts within 60 seconds triggers a 5-minute lockout.
+
+
+### Mining schedule (`schedEnabled`, `schedStart`, `schedEnd`, `timezone`)
+
+Optional daily window, e.g. for solar setups. When `schedEnabled` is true the ASICs
+are shut down (same as `POST /api/system/shutdown`) outside `[schedStart, schedEnd)` and the board
+reboots at the start of the window. `schedStart`/`schedEnd` are minutes since local midnight (0-1439);
+a window may wrap past midnight, and start == end means "always on". `timezone` is a POSIX TZ string
+(default `CET-1CEST,M3.5.0,M10.5.0/3`, e.g. UK: `GMT0BST,M3.5.0/1,M10.5.0`). Until the clock is
+synced over NTP the schedule does nothing and the miner keeps mining. Wi-Fi and the web UI stay up while
+shut down, so the schedule can be switched off again. Frequency, voltage and fan settings are never changed.
