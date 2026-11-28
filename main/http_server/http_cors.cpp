@@ -110,7 +110,20 @@ esp_err_t is_network_allowed(httpd_req_t *req)
         return ESP_FAIL;
     }
 
-    uint32_t request_ip_addr = addr.sin6_addr.un.u32_addr[3];
+    // The httpd socket is dual-stack. Only an IPv4-mapped address (::ffff:a.b.c.d) carries an
+    // IPv4 address in its last 32 bits; for real IPv6 clients those bits are arbitrary and
+    // must NOT be read as an IPv4 address (a global IPv6 address could look like 192.168.x.x).
+    // Real IPv6 clients are accepted only if link-local (fe80::/10) or unique-local (fc00::/7).
+    const uint8_t *a8 = addr.sin6_addr.s6_addr;
+    bool v4_mapped = true;
+    for (int i = 0; i < 10; i++) {
+        if (a8[i] != 0) v4_mapped = false;
+    }
+    if (a8[10] != 0xff || a8[11] != 0xff) v4_mapped = false;
+
+    uint32_t request_ip_addr = v4_mapped ? addr.sin6_addr.un.u32_addr[3] : 0;
+    bool client_private = v4_mapped ? ip_in_private_range(request_ip_addr)
+                                    : (((a8[0] == 0xfe) && ((a8[1] & 0xc0) == 0x80)) || ((a8[0] & 0xfe) == 0xfc));
 
     char ipstr[INET6_ADDRSTRLEN];
     inet_ntop(AF_INET, &request_ip_addr, ipstr, sizeof(ipstr));
@@ -118,7 +131,7 @@ esp_err_t is_network_allowed(httpd_req_t *req)
 
     // Try to read Origin header (browser sends this on CORS requests)
     char origin[128];
-    uint32_t origin_ip_addr;
+    bool origin_private;
 
     if (httpd_req_get_hdr_value_str(req, "Origin", origin, sizeof(origin)) == ESP_OK) {
         ESP_LOGI(CORS_TAG, "Origin header: %s", origin);
@@ -144,16 +157,16 @@ esp_err_t is_network_allowed(httpd_req_t *req)
         }
 
         // Else, interpret host as IPv4 literal (must succeed to continue)
-        origin_ip_addr = get_origin_ip(host);
+        origin_private = ip_in_private_range(get_origin_ip(host));
 
     } else {
         // No Origin header → treat the client IP as origin
         ESP_LOGI(CORS_TAG, "No Origin header found, assuming direct same-client access.");
-        origin_ip_addr = request_ip_addr;
+        origin_private = client_private;
     }
 
     // Final rule: both request IP and origin IP must be private RFC1918
-    if (ip_in_private_range(origin_ip_addr) && ip_in_private_range(request_ip_addr)) {
+    if (origin_private && client_private) {
         ESP_LOGI(CORS_TAG, "allowed: both IPs private");
         return ESP_OK;
     }
