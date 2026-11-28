@@ -67,6 +67,7 @@ export interface IDashboardV2Pool {
     poolDifficulty: number;
     networkDifficulty?: number;
     poolDiffErr?: boolean;
+    rejectReasons?: { reason: string; count: number }[]; // why the pool rejected shares (dashboard only)
 }
 
 export interface IDashboardV2Stratum {

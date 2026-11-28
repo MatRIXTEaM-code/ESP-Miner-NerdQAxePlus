@@ -196,6 +196,9 @@ void StratumManagerFallback::getManagerInfoJson(JsonObject &obj, bool verbose) {
             pool["accepted"] = m_accepted;
             pool["rejected"] = m_rejected;
             pool["bestDiff"] = m_bestSessionDiff;
+            if (verbose) {
+                rejectReasonsToJson(pool, i);
+            }
         }
     }
 }

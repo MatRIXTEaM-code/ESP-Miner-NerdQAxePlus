@@ -317,7 +317,7 @@
                             <div class="pool-tile-metricbar__shares-value">{{ (pool.accepted ?? 0) | number: '1.0-0' }}</div>
                           </div>
 
-                          <div class="pool-tile-metricbar__rejected">
+                          <div class="pool-tile-metricbar__rejected" [attr.title]="rejectReasonsTitle(pool) || null">
                             {{ rejectRate(idx) | number: '1.2-2' }}
                             %&nbsp;/&nbsp;{{ (pool.rejected ?? 0) | number: '1.0-0' }}
                             &nbsp;{{ 'HOME.REJECTED' | translate }}

@@ -233,7 +233,8 @@ void StratumManager::dispatch(int pool, JsonDocument &doc)
             ESP_LOGI(tag, "message result accepted");
             acceptedShare(pool);
         } else {
-            ESP_LOGW(tag, "message result rejected");
+            ESP_LOGW(tag, "message result rejected: %s", m_stratum_api_v1_message.reject_reason);
+            recordRejectReason(pool, m_stratum_api_v1_message.reject_reason);
             rejectedShare(pool);
         }
         m_lastSubmitResponseTimestamp = esp_timer_get_time();
@@ -601,6 +602,83 @@ void StratumManager::getManagerInfoJson(JsonObject &obj, bool /*verbose*/)
     obj["poolBalance"] = Config::getPoolBalance();
 
     obj["totalBestDiff"] = m_totalBestDiff;
+}
+
+void StratumManager::recordRejectReason(int pool, const char *reason)
+{
+    int slot = rejectReasonSlot(pool);
+    if (slot < 0 || slot > 1) {
+        return;
+    }
+    if (!reason || !reason[0]) {
+        reason = "Rejected (no reason given)";
+    }
+
+    PThreadGuard lock(m_reasonMutex);
+    RejectReason *table = m_rejectReasons[slot];
+
+    // the last entry is reserved for "Other"
+    const int last = MAX_REJECT_REASONS - 1;
+    RejectReason *freeEntry = nullptr;
+    for (int i = 0; i < last; i++) {
+        if (table[i].count == 0) {
+            if (!freeEntry) {
+                freeEntry = &table[i];
+            }
+            continue;
+        }
+        if (strncmp(table[i].text, reason, REJECT_REASON_LEN - 1) == 0) {
+            table[i].count++;
+            return;
+        }
+    }
+
+    if (freeEntry) {
+        strlcpy(freeEntry->text, reason, REJECT_REASON_LEN);
+        freeEntry->count = 1;
+        return;
+    }
+
+    // table full: count the rest as "Other"
+    RejectReason &other = table[last];
+    if (other.count == 0) {
+        strlcpy(other.text, "Other", REJECT_REASON_LEN);
+    }
+    other.count++;
+}
+
+void StratumManager::clearRejectReasons(int slot)
+{
+    if (slot < 0 || slot > 1) {
+        return;
+    }
+    PThreadGuard lock(m_reasonMutex);
+    memset(m_rejectReasons[slot], 0, sizeof(m_rejectReasons[slot]));
+}
+
+void StratumManager::rejectReasonsToJson(JsonObject &poolObj, int pool)
+{
+    JsonArray arr = poolObj["rejectReasons"].to<JsonArray>();
+
+    int slot = rejectReasonSlot(pool);
+    if (slot < 0 || slot > 1) {
+        return;
+    }
+
+    PThreadGuard lock(m_reasonMutex);
+    for (int i = 0; i < MAX_REJECT_REASONS; i++) {
+        if (m_rejectReasons[slot][i].count == 0) {
+            continue;
+        }
+        // ArduinoJson copies a non-const char[] but only keeps a pointer to a
+        // const char[] (it assumes a literal), so copy through a local buffer
+        char text[REJECT_REASON_LEN];
+        strlcpy(text, m_rejectReasons[slot][i].text, sizeof(text));
+
+        JsonObject o = arr.add<JsonObject>();
+        o["reason"] = text;
+        o["count"] = m_rejectReasons[slot][i].count;
+    }
 }
 
 void StratumManager::checkForFoundBlock(int pool, double diff, uint32_t nbits)

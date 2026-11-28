@@ -320,10 +320,48 @@ bool StratumApi::parseResult(JsonDocument &doc) {
     return false;
 }
 
+// Pools report a rejection as "error": [code, "message", traceback] (classic stratum)
+// or as an object {"code": ..., "message": "..."}; some only send "result": false.
+static void extractRejectReason(JsonDocument &doc, char *dst, size_t dst_len)
+{
+    dst[0] = '\0';
+    JsonVariant error_json = doc["error"];
+
+    if (error_json.is<JsonArray>()) {
+        JsonArray arr = error_json.as<JsonArray>();
+        const char *msg = arr.size() > 1 ? arr[1].as<const char *>() : nullptr;
+        if (msg && msg[0]) {
+            strlcpy(dst, msg, dst_len);
+        } else if (arr.size() > 0 && arr[0].is<int>()) {
+            snprintf(dst, dst_len, "Error %d", arr[0].as<int>());
+        }
+    } else if (error_json.is<JsonObject>()) {
+        const char *msg = error_json["message"].as<const char *>();
+        if (msg && msg[0]) {
+            strlcpy(dst, msg, dst_len);
+        } else if (error_json["code"].is<int>()) {
+            snprintf(dst, dst_len, "Error %d", error_json["code"].as<int>());
+        }
+    } else if (error_json.is<const char *>()) {
+        const char *msg = error_json.as<const char *>();
+        if (msg && msg[0]) {
+            strlcpy(dst, msg, dst_len);
+        }
+    }
+
+    if (dst[0] == '\0') {
+        strlcpy(dst, "Rejected (no reason given)", dst_len);
+    }
+}
+
 bool StratumApi::parseResponses(JsonDocument &doc, StratumApiV1Message *message)
 {
     message->method = STRATUM_RESULT;
     message->response_success = parseResult(doc);
+    message->reject_reason[0] = '\0';
+    if (!message->response_success) {
+        extractRejectReason(doc, message->reject_reason, sizeof(message->reject_reason));
+    }
     return true;
 }
 

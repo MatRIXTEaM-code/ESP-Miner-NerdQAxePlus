@@ -69,6 +69,8 @@ typedef struct
     uint32_t version_mask;
     // result
     bool response_success;
+    // short reason given by the pool for a rejected share ("" if not a rejection)
+    char reject_reason[40];
 } StratumApiV1Message;
 
 class StratumApi {

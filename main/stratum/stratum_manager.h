@@ -59,6 +59,30 @@ class StratumManager {
 
     bool m_initialized = false;
 
+    // ---- rejected share reasons ------------------------------------------
+    // Pools say why they reject a share ("Job not found", "Low difficulty share", ...).
+    // We count each distinct text so the dashboard can show it. The number of distinct
+    // texts is bounded; everything beyond that is counted as "Other".
+    static constexpr int MAX_REJECT_REASONS = 6;
+    static constexpr int REJECT_REASON_LEN = 40;
+    struct RejectReason {
+        char text[REJECT_REASON_LEN];
+        uint32_t count;
+    };
+    // separate from m_mutex: recordRejectReason() runs while m_mutex is held,
+    // and so does resetPoolSessionStats()
+    pthread_mutex_t m_reasonMutex = PTHREAD_MUTEX_INITIALIZER;
+    RejectReason m_rejectReasons[2][MAX_REJECT_REASONS]{};
+
+    // table slot holding a pool's reasons; failover mode shares its counters between both pools
+    virtual int rejectReasonSlot(int pool) {
+        return pool;
+    }
+
+    void recordRejectReason(int pool, const char *reason);
+    void clearRejectReasons(int slot);
+    void rejectReasonsToJson(JsonObject &poolObj, int pool);
+
     // Coinbase decoder: extranonce state per pool + decoded result + verification
     char *m_extranonce1[2]{};
     int m_extranonce2_len[2]{};
@@ -118,6 +142,7 @@ class StratumManager {
 
     // reset stats for a single pool (called from loadSettings with mutex held)
     virtual void resetPoolSessionStats(int pool) {
+        clearRejectReasons(rejectReasonSlot(pool));
     }
 
   public:

@@ -213,7 +213,7 @@
               <span class="nerd-pool__stat-value"><ng-container *ngIf="splitHumanReadable(pool?.bestDiff | humanReadable) as bd">{{ bd.value }}<span class="u" *ngIf="bd.unit">{{ bd.unit }}</span></ng-container></span>
               <span class="nerd-pool__stat-label">{{ 'HOME.BEST_DIFF_BOOT' | translate }}</span>
             </div>
-            <div class="nerd-pool__stat">
+            <div class="nerd-pool__stat" [attr.title]="rejectReasonsTitle(pool) || null">
               <span class="nerd-pool__stat-value" [class.is-bad]="rejectRate(idx) > 0">{{ rejectRate(idx) | number:'1.2-2' }}<span class="u">%</span></span>
               <span class="nerd-pool__stat-label">{{ 'HOME.REJECTED' | translate }}</span>
             </div>

@@ -44,6 +44,11 @@ class StratumManagerFallback : public StratumManager {
         return 0;
     }
 
+    // failover mode shares its counters between both pools, so do the reasons
+    virtual int rejectReasonSlot(int /*pool*/) override {
+        return 0;
+    }
+
   public:
     StratumManagerFallback();
 

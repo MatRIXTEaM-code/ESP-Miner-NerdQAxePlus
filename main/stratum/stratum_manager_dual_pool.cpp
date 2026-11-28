@@ -236,6 +236,7 @@ void StratumManagerDualPool::getManagerInfoJson(JsonObject &obj, bool verbose)
             pool["verifyBlocked"] = getVerifyBlockedReason(i) ? getVerifyBlockedReason(i) : "";
             pool["activeProtocol"] = m_stratumConfig[i] ? (int)m_stratumConfig[i]->getProtocol() : 0;
             pool["encrypted"] = m_stratumConfig[i] ? (m_stratumConfig[i]->isSV2() || m_stratumConfig[i]->isTLS()) : false;
+            rejectReasonsToJson(pool, i);
         }
     }
 }

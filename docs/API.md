@@ -146,6 +146,10 @@ Real-time mining telemetry. Used by the Home page (polled every 2s).
         "encrypted": false,
         "accepted": 4200,
         "rejected": 3,
+        "rejectReasons": [
+          { "reason": "Job not found", "count": 2 },
+          { "reason": "Low difficulty share", "count": 1 }
+        ],
         "bestDiff": 1234567.89,
         "pingRtt": 42,
         "pingLoss": 0,
@@ -197,6 +201,8 @@ The `history` object is only present when `ts` query parameter is provided. It c
 `performance.chips[]` has one entry per ASIC (`asicCount` entries) with the per-chip valid hashrate (`hashRate`) and the hashrate lost to hardware errors (`errorHashRate`), both in GH/s from the ASIC counters. The chip's total is `hashRate + errorHashRate`. Both are `0` while the device is shut down.
 
 `stratum.pools[]` always contains both pool configs in config order: index 0 = primary, index 1 = fallback (failover mode) or secondary (dual pool mode). `active` marks the pool that is currently mining — in failover mode exactly one entry is active (also reflected by `usingFallback`), in dual pool mode both are. In failover mode the session stats (`accepted`, `rejected`, `bestDiff`, `poolDifficulty`, `networkDifficulty`) are shared between both pools and reported on the active entry only.
+
+`rejectReasons` (dashboard endpoint only, not in `/api/system/info`) lists why the pool rejected shares since the stats were last reset: the text the pool sent with each rejection (SV1 `error` message, SV2 `SubmitShares.Error` code) and how often it occurred. Up to 5 distinct texts are kept per pool; any further ones are counted together as `"Other"`. The counts add up to `rejected`. Like the other session stats it is shared between both pools in failover mode.
 
 ---
 

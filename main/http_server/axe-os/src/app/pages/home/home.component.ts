@@ -2074,6 +2074,13 @@ private setAxisPadding(cfg: any, persist: boolean = false): void {
 }
   private readonly otpAuth = inject(OtpAuthService);
 
+  /** Tooltip text for a pool's rejected shares: one "reason: count" line per distinct reason. */
+  public rejectReasonsTitle(pool: { rejectReasons?: { reason: string; count: number }[] } | null | undefined): string {
+    const list = pool?.rejectReasons;
+    if (!Array.isArray(list) || list.length === 0) return '';
+    return list.map(r => `${r.reason}: ${r.count}`).join('\n');
+  }
+
   /** Reset-stats dialog: also reset the persisted all-time stats. */
   public resetAllTime = false;
 

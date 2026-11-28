@@ -682,6 +682,7 @@ void StratumTaskV2::handleSubmitSharesError(const uint8_t *payload, uint32_t len
     if (sv2_parse_submit_shares_error(payload, len, &channel_id, &seq_num,
                                        error_code, sizeof(error_code)) == 0) {
         ESP_LOGW(m_tag, "Share rejected: %s", error_code);
+        m_manager->recordRejectReason(m_index, error_code);
         m_manager->rejectedShare(m_index);
         m_manager->m_lastSubmitResponseTimestamp = esp_timer_get_time();
     }
