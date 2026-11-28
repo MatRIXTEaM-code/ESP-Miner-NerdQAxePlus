@@ -32,6 +32,7 @@
 #include "http_server.h"
 #include "influx_task.h"
 #include "schedule_task.h"
+#include "diagnostics.h"
 #include "macros.h"
 #include "main.h"
 #include "nvs_config.h"
@@ -246,6 +247,8 @@ extern "C" void app_main(void)
 
     // shows and saves last reset reason
     esp_reset_reason_t reason = SYSTEM_MODULE.showLastResetReason();
+    diag_boot(reason);
+    diag_start();
 
     // migrate config
     Config::migrate_config();

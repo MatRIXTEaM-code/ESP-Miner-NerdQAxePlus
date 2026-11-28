@@ -56,9 +56,25 @@ Device info, network status and memory. Used by the System page (polled every 5s
   "memory": {
     "freeHeap": 4000000,
     "freeHeapInt": 120000
+  },
+  "diag": {
+    "minFreeHeapInt": 95000,
+    "largestBlockInt": 60000,
+    "minFreeHeapPsram": 3900000,
+    "largestBlockPsram": 3800000,
+    "httpSockets": 3,
+    "httpSocketsPeak": 6,
+    "httpFileErrors": 0,
+    "boots": 4,
+    "resetHistory": [ { "reason": "task_wdt", "uptimeSeconds": 172800 } ]
   }
 }
 ```
+
+`diag` is read-only and for bug hunting: lowest free heap since boot and the largest
+single allocatable block (fragmentation), open/peak web-server sockets, web files whose
+transfer failed, boot count, and the last reasons the board reset with how long the
+previous run lasted (newest first; kept across soft resets/panics/watchdogs, cleared on power loss).
 
 ---
 

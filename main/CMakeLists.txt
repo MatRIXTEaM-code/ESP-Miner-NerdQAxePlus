@@ -4,6 +4,7 @@ SRCS
     "nvs_config.cpp"
     "system.cpp"
     "sntp.cpp"
+    "diagnostics.cpp"
     "utils.cpp"
     "boards/board.cpp"
     "boards/nerdaxe.cpp"

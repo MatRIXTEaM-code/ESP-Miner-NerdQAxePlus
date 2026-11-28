@@ -11,6 +11,7 @@
 #include "nvs_config.h"
 #include "http_cors.h"
 #include "http_utils.h"
+#include "diagnostics.h"
 
 static const char *TAG = "http_v2_system";
 
@@ -58,6 +59,9 @@ esp_err_t GET_V2_system(httpd_req_t *req)
     JsonObject memory = doc["memory"].to<JsonObject>();
     memory["freeHeap"]    = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
     memory["freeHeapInt"] = heap_caps_get_free_size(MALLOC_CAP_INTERNAL);
+
+    // Long-uptime diagnostics (read-only)
+    diag_to_json(doc["diag"].to<JsonObject>());
 
     free(hostname);
     free(ssid);

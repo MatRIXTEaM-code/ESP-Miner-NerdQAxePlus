@@ -1,3 +1,4 @@
+#include "diagnostics.h"
 #include <fcntl.h>
 #include <string.h>
 
@@ -226,6 +227,7 @@ esp_err_t rest_common_get_handler(httpd_req_t *req)
             // either: that would tell the client the truncated body is complete.
             // Returning ESP_FAIL makes httpd close the connection, so the client sees
             // an incomplete transfer and can retry.
+            diag_count_http_file_error();
             return ESP_FAIL;
         }
 
@@ -240,6 +242,7 @@ esp_err_t rest_common_get_handler(httpd_req_t *req)
             // body as complete, so a client that still receives it would accept a
             // truncated .js/.css file as valid (and may cache it).
             // Returning ESP_FAIL makes httpd close the connection instead.
+            diag_count_http_file_error();
             return ESP_FAIL;
         }
     }
